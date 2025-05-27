@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mi_ticket_desayuno_app/presentation/utils/utils.dart';
 import 'package:mi_ticket_desayuno_app/presentation/widgets/custom_text_form_field_widget.dart';
+import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,11 +18,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _email = '';
   String _password = '';
 
-  void _submit() {
+  void _submit(AuthProvider authProvider) async {
     final form = _formKey.currentState!;
     if (form.validate()) {
       form.save();
-      // Aquí llamas a tu lógica de registro con _name, _email y _password
+      final bool registerResult = await authProvider.register(
+        _name,
+        _email,
+        _password,
+      );
+      if (registerResult) {
+        context.pushReplacement('/client-dashboard');
+      } else {
+        PresentationUtils.showCustomSnackbar(
+          context,
+          'Error en el registro o datos incorrectos',
+        );
+      }
     }
   }
 
@@ -45,6 +60,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       body: Padding(
@@ -89,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: _submit,
+                    onPressed: () => _submit(authProvider),
                     child: const Text('Registrarse'),
                   ),
                   const SizedBox(height: 12),

@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  http:
+  dio:
   flutter_secure_storage:
   provider:
   jwt_decoder:
