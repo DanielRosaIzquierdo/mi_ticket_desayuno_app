@@ -5,18 +5,27 @@ import 'package:mi_ticket_desayuno_app/models/user_model.dart';
 import 'package:mi_ticket_desayuno_app/preferences/preferences.dart';
 
 class AuthProvider with ChangeNotifier {
+  bool isLoading = false;
   User? user;
+  void setIsLoading() {
+    isLoading = true;
+    notifyListeners();
+  }
+
+  void setHasLoaded() {
+    isLoading = false;
+    notifyListeners();
+  }
 
   Future<bool> login(String email, String password) async {
     try {
-      final dio = DioService().client;
+      final dio = DioService.instance.client;
       final response = await dio.post(
         '/auth/login',
         data: {'email': email, 'password': password},
       );
       final token = response.data['token'];
       if (token != null) {
-        print(token);
         await saveUserData(token);
         return true;
       } else {
@@ -25,7 +34,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       return false;
     }
-  }//probar registro
+  }
 
   Future<void> saveUserData(token) async {
     await Preferences().saveToken(token);
@@ -36,7 +45,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> register(String name, String email, String password) async {
     try {
-      final dio = DioService().client;
+      final dio = DioService.instance.client;
       final response = await dio.post(
         '/auth/register',
         data: {'name': name, 'email': email, 'password': password},

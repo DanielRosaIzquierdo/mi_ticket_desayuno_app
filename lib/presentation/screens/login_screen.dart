@@ -18,15 +18,19 @@ class _LoginScreenState extends State<LoginScreen> {
   String _password = '';
 
   void _submit(AuthProvider authProvider) async {
+    
     final form = _formKey.currentState!;
     if (form.validate()) {
       form.save();
+      authProvider.setIsLoading();
       final bool loginResult = await authProvider.login(_email, _password);
       if (loginResult) {
         if (authProvider.user!.role == 'client') {
           context.pushReplacement('/client-dashboard');
+          authProvider.setHasLoaded();
         }
       } else {
+        authProvider.setHasLoaded();
         PresentationUtils.showCustomSnackbar(
           context,
           'Error en el login o datos incorrectos',
@@ -34,6 +38,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+
+  
 
   String? _emailValidator(String? value) {
     if (value == null || value.isEmpty) return 'El correo es obligatorio';
@@ -88,7 +94,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: () => _submit(authProvider),
+                    onPressed:
+                        (authProvider.isLoading)
+                            ? null
+                            : () => _submit(authProvider),
                     child: const Text('Iniciar sesión'),
                   ),
                   const SizedBox(height: 12),

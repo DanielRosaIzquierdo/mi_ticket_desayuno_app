@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final form = _formKey.currentState!;
     if (form.validate()) {
       form.save();
+      authProvider.setIsLoading();
       final bool registerResult = await authProvider.register(
         _name,
         _email,
@@ -29,7 +30,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       if (registerResult) {
         context.pushReplacement('/client-dashboard');
+        authProvider.setHasLoaded();
       } else {
+        authProvider.setHasLoaded();
         PresentationUtils.showCustomSnackbar(
           context,
           'Error en el registro o datos incorrectos',
@@ -40,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String? _nameValidator(String? value) {
     if (value == null || value.isEmpty) return 'El nombre es obligatorio';
-    if (value.length < 3) return 'Debe tener al menos 3 caracteres';
+    if (value.length < 2) return 'Debe tener al menos 2 caracteres';
     return null;
   }
 
@@ -105,7 +108,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
-                    onPressed: () => _submit(authProvider),
+                    onPressed:
+                        (authProvider.isLoading)
+                            ? null
+                            : () => _submit(authProvider),
                     child: const Text('Registrarse'),
                   ),
                   const SizedBox(height: 12),
