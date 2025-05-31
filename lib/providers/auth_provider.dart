@@ -6,7 +6,8 @@ import 'package:mi_ticket_desayuno_app/preferences/preferences.dart';
 
 class AuthProvider with ChangeNotifier {
   bool isLoading = false;
-  User? user;
+  User user = User(id: '', name: '', email: '', role: '');
+
   void setIsLoading() {
     isLoading = true;
     notifyListeners();
@@ -14,6 +15,12 @@ class AuthProvider with ChangeNotifier {
 
   void setHasLoaded() {
     isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    await Preferences().deleteToken();
+    user = User(id: '', name: '', email: '', role: '');
     notifyListeners();
   }
 

@@ -18,14 +18,13 @@ class _LoginScreenState extends State<LoginScreen> {
   String _password = '';
 
   void _submit(AuthProvider authProvider) async {
-    
     final form = _formKey.currentState!;
     if (form.validate()) {
       form.save();
       authProvider.setIsLoading();
       final bool loginResult = await authProvider.login(_email, _password);
       if (loginResult) {
-        if (authProvider.user!.role == 'client') {
+        if (authProvider.user.role == 'client') {
           context.pushReplacement('/client-dashboard');
           authProvider.setHasLoaded();
         }
@@ -38,8 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
-
-  
 
   String? _emailValidator(String? value) {
     if (value == null || value.isEmpty) return 'El correo es obligatorio';
@@ -56,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
@@ -69,13 +65,14 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.coffee, size: 72, color: colorScheme.primary),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Inicio de sesión',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
+                  // Icon(Icons.coffee, size: 72, color: colorScheme.primary),
+                  // const SizedBox(height: 24),
+                  // Text(
+                  //   'Inicio de sesión',
+                  //   textAlign: TextAlign.center,
+                  //   style: Theme.of(context).textTheme.headlineMedium,
+                  // ),
+                  Image.asset('assets/images/logo.png'),
                   const SizedBox(height: 32),
                   CustomTextFormField(
                     label: 'Correo electrónico',
