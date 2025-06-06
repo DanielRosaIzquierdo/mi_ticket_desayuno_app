@@ -27,6 +27,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (authProvider.user.role == 'client') {
           context.pushReplacement('/client-dashboard');
           authProvider.setHasLoaded();
+        } else if (authProvider.user.role == 'stablishment') {
+          context.pushReplacement('/stablishment-dashboard');
+          authProvider.setHasLoaded();
         }
       } else {
         authProvider.setHasLoaded();

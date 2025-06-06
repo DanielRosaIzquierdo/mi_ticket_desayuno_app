@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mi_ticket_desayuno_app/models/discount_model.dart';
+import 'package:mi_ticket_desayuno_app/models/discount_progress_model.dart';
 import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -22,20 +22,20 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     // ─────────── Datos de ejemplo ───────────
-    final allDiscounts = <Discount>[
-      Discount(
+    final allDiscounts = <DiscountProgress>[
+      DiscountProgress(
         id: '1',
         type: 'spending',
         value: 0.35,
         conditions: 'Gasta 50 €',
       ),
-      Discount(
+      DiscountProgress(
         id: '2',
         type: 'purchases',
         value: 0.60,
         conditions: '10 visitas',
       ),
-      Discount(
+      DiscountProgress(
         id: '3',
         type: 'spending',
         value: 0.10,
@@ -111,6 +111,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 
       // ═════════ FAB QR ═════════
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'show-qr',
         onPressed: () => _showQrDialog(context, authProvider.user.id),
         icon: const Icon(Icons.qr_code),
         label: const Text('Mostrar QR'),
@@ -198,7 +199,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 class _DiscountCard extends StatelessWidget {
   const _DiscountCard({required this.discount});
 
-  final Discount discount;
+  final DiscountProgress discount;
 
   @override
   Widget build(BuildContext context) {
