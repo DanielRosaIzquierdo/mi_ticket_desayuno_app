@@ -50,6 +50,12 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> saveUserDataWithoutNotify(token) async {
+    await Preferences().saveToken(token);
+    final decodedToken = JwtDecoder.decode(token);
+    user = User.fromJson(decodedToken);
+  }
+
   Future<bool> register(String name, String email, String password) async {
     try {
       final dio = DioService.instance.client;
@@ -72,5 +78,18 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       return false;
     }
+  }
+
+  Future<bool> checkLogin() async {
+    String? token = await Preferences().getToken();
+    print(token);
+    if (token == null) {
+      return false;
+    }
+    if (JwtDecoder.isExpired(token)) {
+      return false;
+    }
+    await saveUserDataWithoutNotify(token);
+    return true;
   }
 }

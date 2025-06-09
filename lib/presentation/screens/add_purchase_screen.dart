@@ -102,12 +102,8 @@ class AddPurchaseScreen extends StatelessWidget {
                   provider.isEmpty
                       ? null
                       : () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const QRScannerScreen(),
-                          ),
-                        );
+                        //final result = '1h0ltk1ce8tbD5n4BAOn';
+                         final result = await context.push('/qr-scanner');
 
                         if (result != null) {
                           final userId = result.toString();

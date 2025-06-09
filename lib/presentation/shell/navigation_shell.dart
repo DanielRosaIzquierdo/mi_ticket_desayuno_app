@@ -22,6 +22,10 @@ class NavigationShell extends StatelessWidget {
             icon: Icon(Icons.shopping_cart),
             label: 'Compras',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: 'Estadísticas',
+          ),
         ],
       ),
     );

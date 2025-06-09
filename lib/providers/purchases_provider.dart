@@ -20,15 +20,12 @@ class PurchasesProvider with ChangeNotifier {
     Product(name: 'Té', price: 1.50, imageAsset: 'assets/images/te.jpg'),
   ];
 
-  // 2. Lista de nombres de productos “seleccionados”
-  final List<String> selectedProductNames = [];
+  List<String> selectedProductNames = [];
 
-  // 3. Getter: cantidad para un producto dado
   int quantityOf(Product product) {
     return selectedProductNames.where((name) => name == product.name).length;
   }
 
-  // 4. Getter: total acumulado
   double get total {
     double sum = 0;
     for (final product in products) {
@@ -38,7 +35,6 @@ class PurchasesProvider with ChangeNotifier {
     return sum;
   }
 
-  // 5. Incrementar / decrementar selección
   void increment(Product product) {
     selectedProductNames.add(product.name);
     notifyListeners();
@@ -68,7 +64,7 @@ class PurchasesProvider with ChangeNotifier {
       // Por ejemplo, en DioService podrías tener:
       //   _dio = Dio(BaseOptions(baseUrl: 'http://192.168.x.x:3000'));
       final response = await dio.get('/auth/user/$userId');
-print('======================================== ${response.statusCode}');
+      print('======================================== ${response.statusCode}');
       if (response.statusCode == 200) {
         final data = response.data;
         // Dependiendo de cómo te devuelva el backend: si data es un Map con campo 'id':
@@ -100,5 +96,9 @@ print('======================================== ${response.statusCode}');
       totalAmount: total,
       date: DateTime.now(),
     );
+  }
+
+  void resetSelectedProducts() {
+    selectedProductNames = [];
   }
 }

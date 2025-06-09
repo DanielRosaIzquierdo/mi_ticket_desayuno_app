@@ -9,7 +9,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => PurchasesProvider()),
+        ChangeNotifierProvider(create: (context) => PurchasesProvider()),
       ],
       child: const MyApp(),
     ),

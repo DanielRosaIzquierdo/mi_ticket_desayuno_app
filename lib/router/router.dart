@@ -10,6 +10,7 @@ import 'package:mi_ticket_desayuno_app/presentation/screens/qr_scanner_screen.da
 import 'package:mi_ticket_desayuno_app/presentation/screens/register_screen.dart';
 import 'package:mi_ticket_desayuno_app/presentation/screens/splash_screen.dart';
 import 'package:mi_ticket_desayuno_app/presentation/screens/stablishment_dashboard_screen.dart';
+import 'package:mi_ticket_desayuno_app/presentation/screens/stats_screen.dart';
 import 'package:mi_ticket_desayuno_app/presentation/shell/navigation_shell.dart';
 
 final router = GoRouter(
@@ -30,7 +31,6 @@ final router = GoRouter(
       path: '/add-purchase',
       builder: (context, state) => AddPurchaseScreen(),
     ),
-    // En tu configuración de rutas (normalmente en main.dart o router.dart):
     GoRoute(
       path: '/qr-scanner',
       builder: (context, state) => const QRScannerScreen(),
@@ -65,6 +65,16 @@ final router = GoRouter(
               pageBuilder:
                   (context, state) =>
                       const NoTransitionPage(child: PurchasesScreen()),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/stats',
+              pageBuilder:
+                  (context, state) =>
+                      const NoTransitionPage(child: StatsScreen()),
             ),
           ],
         ),
