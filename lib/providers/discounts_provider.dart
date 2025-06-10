@@ -8,7 +8,6 @@ import 'package:mi_ticket_desayuno_app/models/discount_stablishment_view.dart';
 class DiscountsProvider with ChangeNotifier {
   final dio = DioService.instance.client;
   bool loadingFinalPrice = false;
-  int discountPercent = 0;
   List<DiscountProgress> allDiscounts = [];
   List<DiscountStablishmentView> discountsStablishmentView = [];
 
@@ -92,19 +91,4 @@ class DiscountsProvider with ChangeNotifier {
     loadingFinalPrice = false;
   }
 
-  Future<void> getDiscountPercentByUserId(String userId) async {
-    setLoadingFinalPrice();
-    try {
-      final response = await dio.get('/discounts/$userId');
-      if (response.statusCode == 200 && response.data != null) {
-        setHasLoadedFinalPrice();
-        discountPercent = int.parse(response.data["percent"]);
-      }
-      setHasLoadedFinalPrice();
-      discountPercent = 0;
-    } catch (e) {
-      setHasLoadedFinalPrice();
-      discountPercent = 0;
-    }
-  }
 }
