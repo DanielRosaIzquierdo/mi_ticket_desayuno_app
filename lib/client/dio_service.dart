@@ -12,9 +12,9 @@ class DioService {
   DioService._internal() {
     _dio = Dio(BaseOptions(
       baseUrl: Constants.apiUrl,
-      connectTimeout: Duration(seconds: 10),
-      sendTimeout: Duration(seconds: 10),   
-      receiveTimeout: Duration(seconds: 10),
+      connectTimeout: Duration(seconds: 70),
+      sendTimeout: Duration(seconds: 70),   
+      receiveTimeout: Duration(seconds: 70),
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
