@@ -29,36 +29,68 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
     final purchasesProvider = Provider.of<PurchasesProvider>(context);
 
     final purchases = purchasesProvider.purchases;
-    // final purchases = [
-    //   Purchase(
-    //     id: 'p1',
-    //     userId: 'user1',
-    //     totalAmount: 18.50,
-    //     date: DateTime.now().subtract(const Duration(days: 1)),
-    //     products: [
-    //       Product(name: 'Café', price: 1.50, quantity: 2),
-    //       Product(name: 'Croissant', price: 2.00, quantity: 3),
-    //       Product(name: 'Zumo', price: 3.00, quantity: 1),
-    //     ],
-    //   ),
-    //   Purchase(
-    //     id: 'p2',
-    //     userId: 'user2',
-    //     totalAmount: 12.00,
-    //     date: DateTime.now().subtract(const Duration(days: 2)),
-    //     products: [
-    //       Product(name: 'Tostada', price: 2.00, quantity: 1),
-    //       Product(name: 'Té', price: 1.50, quantity: 1),
-    //     ],
-    //   ),
-    // ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial de compras'),
         centerTitle: true,
         leading: Image.asset('assets/images/icon.png'),
+
         actions: [
+          // Botón para borrar todas las compras
+          IconButton(
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Confirmar eliminación'),
+                      content: const Text(
+                        '¿Estás seguro de que quieres borrar TODAS las compras? Esta acción no se puede deshacer.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            'Borrar todo',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+              );
+
+              if (confirmed == true) {
+                final purchasesProvider = Provider.of<PurchasesProvider>(
+                  context,
+                  listen: false,
+                );
+                final success = await purchasesProvider.deleteAllPurchases();
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Todas las compras han sido eliminadas'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Error al eliminar las compras'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.delete_forever),
+            tooltip: 'Borrar todas las compras',
+          ),
           IconButton(
             onPressed: () {
               authProvider.logout();
@@ -84,75 +116,90 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: purchases.length,
-                itemBuilder: (_, index) {
-                  final purchase = purchases[index];
-                  final email = purchase.userEmail ?? 'Usuario eliminado';
-                  final formattedDate = DateFormat(
-                    'dd MMM yyyy, HH:mm',
-                  ).format(purchase.date);
-
-                  return Card(
-                    elevation: 3,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.receipt_long, size: 20),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  email,
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Text(
-                                '${purchase.totalAmount.toStringAsFixed(2)} €',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Fecha: $formattedDate',
-                            style: const TextStyle(color: Colors.black87),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Productos:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          ...purchase.products.map(
-                            (p) => Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '- ${p.name}${p.quantity > 1 ? ' x${p.quantity}' : ''}',
-                                ),
-                                Text(
-                                  '${(p.price * p.quantity).toStringAsFixed(2)} €',
-                                ),
-                              ],
+              child:
+                  (purchases.isEmpty)
+                      ? Center(child: Text('No hay compras aún'))
+                      : ListView.builder(
+                        itemCount: purchases.length,
+                        itemBuilder: (_, index) {
+                          final purchase = purchases[index];
+                          final email =
+                              purchase.userEmail ?? 'Usuario eliminado';
+                          final formattedDate = DateFormat(
+                            'dd MMM yyyy, HH:mm',
+                          ).format(purchase.date);
+      
+                          return Card(
+                            elevation: 3,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                          ),
-                        ],
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.receipt_long,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          email,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${purchase.totalAmount.toStringAsFixed(2)} €',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Fecha: $formattedDate',
+                                    style: const TextStyle(
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Productos:',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  ...purchase.products.map(
+                                    (p) => Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '- ${p.name}${p.quantity > 1 ? ' x${p.quantity}' : ''}',
+                                        ),
+                                        Text(
+                                          '${(p.price * p.quantity).toStringAsFixed(2)} €',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),

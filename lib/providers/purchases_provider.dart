@@ -3,10 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mi_ticket_desayuno_app/client/dio_service.dart';
 import 'package:mi_ticket_desayuno_app/models/purchase_model.dart';
+import 'package:mi_ticket_desayuno_app/models/top_purchasers_model.dart';
+import 'package:mi_ticket_desayuno_app/models/top_spenders_model.dart';
 
 class PurchasesProvider with ChangeNotifier {
   final dio = DioService.instance.client;
   List<Purchase> purchases = [];
+  List<TopSpender> topSpenders = [];
+  List<TopPurchaser> topPurchasers = [];
   final List<Product> products = [
     Product(
       name: 'Café',
@@ -80,7 +84,7 @@ class PurchasesProvider with ChangeNotifier {
 
     if (response.statusCode == 200) {
       purchases = purchaseFromHistoryFromJson(jsonEncode(response.data));
-      addEmailToPurchases();
+      await addEmailToPurchases();
       notifyListeners();
     }
   }
@@ -120,6 +124,26 @@ class PurchasesProvider with ChangeNotifier {
         }
       } catch (e) {}
     }
+  }
+
+  Future<void> getTopSpenders() async {
+    try {
+      final response = await dio.get('/purchases/top-spenders');
+      if (response.statusCode == 200 && response.data != null) {
+        topSpenders = topSpendersFromJson(jsonEncode(response.data));
+        notifyListeners();
+      }
+    } catch (e) {}
+  }
+
+  Future<void> getTopPurchasers() async {
+    try {
+      final response = await dio.get('/purchases/top-purchasers');
+      if (response.statusCode == 200 && response.data != null) {
+        topPurchasers = topPurchasersFromJson(jsonEncode(response.data));
+        notifyListeners();
+      }
+    } catch (e) {}
   }
 
   Future<bool> makePurchase(Purchase purchase, String discountId) async {
@@ -165,6 +189,24 @@ class PurchasesProvider with ChangeNotifier {
       );
 
       return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteAllPurchases() async {
+    try {
+      final response = await dio.delete('/purchases/all');
+
+      if (response.statusCode == 200) {
+        purchases.clear();
+        topSpenders.clear();
+        topPurchasers.clear();
+        notifyListeners();
+
+        return true;
+      }
+      return false;
     } catch (e) {
       return false;
     }

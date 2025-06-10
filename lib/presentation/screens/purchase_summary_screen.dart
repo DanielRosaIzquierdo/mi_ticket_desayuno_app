@@ -101,6 +101,7 @@ class PurchaseSummaryScreen extends StatelessWidget {
                   onPressed: ()async {
                     await purchasesProvider.makePurchase(purchase, discountId);
                     purchasesProvider.resetSelectedProducts();
+                    await purchasesProvider.getPurchases();
                     context.go('/purchases');
                   },
                   icon: const Icon(

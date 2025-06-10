@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mi_ticket_desayuno_app/models/top_spenders_model.dart';
+import 'package:mi_ticket_desayuno_app/providers/purchases_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:mi_ticket_desayuno_app/providers/discounts_provider.dart';
 import 'package:mi_ticket_desayuno_app/models/top_purchasers_model.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -27,7 +27,7 @@ class _StatsScreenState extends State<StatsScreen>
     _tabController = TabController(length: _tabs.length, vsync: this);
 
     Future.microtask(() async {
-      final provider = context.read<DiscountsProvider>();
+      final provider = context.read<PurchasesProvider>();
       await provider.getTopSpenders();
       await provider.getTopPurchasers();
       if (mounted) setState(() => _loading = false);
@@ -90,7 +90,7 @@ class _StatsScreenState extends State<StatsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final discountsProvider = context.watch<DiscountsProvider>();
+    final purchasesProvider = context.watch<PurchasesProvider>();
 
     return Scaffold(
       appBar: AppBar(
@@ -104,11 +104,11 @@ class _StatsScreenState extends State<StatsScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: _buildSpendersList(discountsProvider.topSpenders),
+            child: _buildSpendersList(purchasesProvider.topSpenders),
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: _buildPurchasersList(discountsProvider.topPurchasers),
+            child: _buildPurchasersList(purchasesProvider.topPurchasers),
           ),
         ],
       ),

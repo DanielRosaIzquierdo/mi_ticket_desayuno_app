@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:mi_ticket_desayuno_app/client/dio_service.dart';
 import 'package:mi_ticket_desayuno_app/models/discount_progress_model.dart';
 import 'package:mi_ticket_desayuno_app/models/discount_stablishment_view.dart';
-import 'package:mi_ticket_desayuno_app/models/top_purchasers_model.dart';
-import 'package:mi_ticket_desayuno_app/models/top_spenders_model.dart';
 
 class DiscountsProvider with ChangeNotifier {
   final dio = DioService.instance.client;
@@ -13,8 +11,6 @@ class DiscountsProvider with ChangeNotifier {
   int discountPercent = 0;
   List<DiscountProgress> allDiscounts = [];
   List<DiscountStablishmentView> discountsStablishmentView = [];
-  List<TopSpender> topSpenders = [];
-  List<TopPurchaser> topPurchasers = [];
 
   Future<void> getUserProgress() async {
     final response = await dio.get('/discounts/progress');
@@ -86,26 +82,6 @@ class DiscountsProvider with ChangeNotifier {
     } catch (e) {
       return null;
     }
-  }
-
-  Future<void> getTopSpenders() async {
-    try {
-      final response = await dio.get('/purchases/top-spenders');
-      if (response.statusCode == 200 && response.data != null) {
-        topSpenders = topSpendersFromJson(jsonEncode(response.data));
-        notifyListeners();
-      }
-    } catch (e) {}
-  }
-
-  Future<void> getTopPurchasers() async {
-    try {
-      final response = await dio.get('/purchases/top-purchasers');
-      if (response.statusCode == 200 && response.data != null) {
-        topPurchasers = topPurchasersFromJson(jsonEncode(response.data));
-        notifyListeners();
-      }
-    } catch (e) {}
   }
 
   void setLoadingFinalPrice() {
