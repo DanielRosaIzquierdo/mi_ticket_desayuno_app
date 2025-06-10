@@ -15,8 +15,8 @@ class _AddDiscountScreenState extends State<AddDiscountScreen> {
   final _formKey = GlobalKey<FormState>();
   String _type = 'spending';
   String _conditions = '';
-  double _value = 0.0; // objetivo (euros o visitas)
-  double _discount = 0.0; // porcentaje de descuento
+  double _value = 0.0;
+  double _discount = 0.0;
 
   void _submit() async {
     final form = _formKey.currentState!;
@@ -32,7 +32,7 @@ class _AddDiscountScreenState extends State<AddDiscountScreen> {
         type: _type,
         value: _value.toInt(),
         conditions: _conditions,
-        discount: (_discount * 100).toInt(), // almacena como entero %
+        discount: (_discount * 100).toInt(),
       );
 
       if (discountId != null) {

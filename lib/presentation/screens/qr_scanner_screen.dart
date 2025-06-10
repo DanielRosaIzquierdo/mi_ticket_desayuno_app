@@ -15,16 +15,30 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Escanear QR')),
-      body: MobileScanner(
-        onDetect: (capture) {
-          if (_scanned) return;
-          final code = capture.barcodes.first.rawValue;
-          if (code != null) {
-            _scanned = true;
-            context.pop(code);
-          }
-        },
+      appBar: AppBar(title: const Text('Apunta al QR')),
+      body: Stack(
+        children: [
+          MobileScanner(
+            onDetect: (capture) {
+              if (_scanned) return;
+              final code = capture.barcodes.first.rawValue;
+              if (code != null) {
+                _scanned = true;
+                context.pop(code);
+              }
+            },
+          ),
+          Center(
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.green, width: 4),
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

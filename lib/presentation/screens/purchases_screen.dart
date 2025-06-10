@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:mi_ticket_desayuno_app/presentation/utils/utils.dart';
 import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
 import 'package:mi_ticket_desayuno_app/providers/purchases_provider.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +38,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
         leading: Image.asset('assets/images/icon.png'),
 
         actions: [
-          // Botón para borrar todas las compras
+        
           IconButton(
             onPressed: () async {
               final confirmed = await showDialog<bool>(
@@ -72,18 +73,14 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                 final success = await purchasesProvider.deleteAllPurchases();
 
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Todas las compras han sido eliminadas'),
-                      backgroundColor: Colors.green,
-                    ),
+                  PresentationUtils.showCustomSnackbar(
+                    context,
+                    'Todas las compras han sido eliminadas',
                   );
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Error al eliminar las compras'),
-                      backgroundColor: Colors.red,
-                    ),
+                  PresentationUtils.showCustomSnackbar(
+                    context,
+                    'Error al eliminar las compras',
                   );
                 }
               }
@@ -125,9 +122,9 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                           final purchase = purchases[index];
                           final email =
                               purchase.userEmail ?? 'Usuario eliminado';
-                          final formattedDate = DateFormat(
+                            final formattedDate = DateFormat(
                             'dd MMM yyyy, HH:mm',
-                          ).format(purchase.date);
+                            ).format(purchase.date.toLocal());
 
                           return Card(
                             elevation: 3,

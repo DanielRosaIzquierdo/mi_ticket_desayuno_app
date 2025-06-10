@@ -68,13 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Icon(Icons.coffee, size: 72, color: colorScheme.primary),
-                  // const SizedBox(height: 24),
-                  // Text(
-                  //   'Inicio de sesión',
-                  //   textAlign: TextAlign.center,
-                  //   style: Theme.of(context).textTheme.headlineMedium,
-                  // ),
+                
                   Image.asset('assets/images/logo.png'),
                   const SizedBox(height: 32),
                   CustomTextFormField(

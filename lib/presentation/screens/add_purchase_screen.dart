@@ -97,7 +97,6 @@ class AddPurchaseScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Botón QR (desplegar escáner y verificar usuario)
             ElevatedButton.icon(
               onPressed:
                   purchasesProvider.isEmpty
@@ -105,39 +104,38 @@ class AddPurchaseScreen extends StatelessWidget {
                       : () async {
                         try {
                           dynamic result = await context.push('/qr-scanner');
+                          if (result != null) {
+                            Map<String, dynamic> resultMap = jsonDecode(result);
+                            final String userId = resultMap["user_id"];
+                            final int discount = resultMap["discount"];
+                            final String discountId = resultMap["discount_id"];
+                            final exists = await authProvider.checkUserExists(
+                              userId,
+                            );
+                            if (exists) {
+                              final purchase = purchasesProvider
+                                  .createPurchaseObject(userId, discount);
 
-                        print(result);
-                        if (result != null) {
-                          Map<String, dynamic> resultMap = jsonDecode(result);
-                          final String userId = resultMap["user_id"];
-                          final int discount = resultMap["discount"];
-                          final String discountId = resultMap["discount_id"];
-                          final exists = await authProvider.checkUserExists(
-                            userId,
-                          );
-                          if (exists) {
-                            final purchase = purchasesProvider
-                                .createPurchaseObject(userId, discount);
-                                print('========================= entrando en summary... =========================');
-                          await  context.push(
-                              '/purchase-summary',
-                              extra: {
-                                'purchase': purchase,
-                                'discountId': discountId,
-                              },
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Usuario no encontrado'),
-                              ),
-                            );
+                              await context.push(
+                                '/purchase-summary',
+                                extra: {
+                                  'purchase': purchase,
+                                  'discountId': discountId,
+                                },
+                              );
+                            } else {
+                              PresentationUtils.showCustomSnackbar(
+                                context,
+                                'Usuario no encontrado',
+                              );
+                            }
                           }
-                        }
                         } catch (e) {
-                            PresentationUtils.showCustomSnackbar(context, 'Error al escanear, vuelve a intentarlo');
+                          PresentationUtils.showCustomSnackbar(
+                            context,
+                            'Error al escanear, vuelve a intentarlo',
+                          );
                         }
-                        
                       },
               icon: const Icon(Icons.qr_code_scanner),
               label: const Text('Escanear QR usuario'),

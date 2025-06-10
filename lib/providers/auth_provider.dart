@@ -82,7 +82,6 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> checkLogin() async {
     String? token = await Preferences().getToken();
-    print(token);
     if (token == null) {
       return false;
     }

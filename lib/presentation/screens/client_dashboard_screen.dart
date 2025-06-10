@@ -1,4 +1,4 @@
-import 'dart:convert'; // Añadir para jsonEncode
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mi_ticket_desayuno_app/models/discount_progress_model.dart';
@@ -30,15 +30,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     discountsProvider.getUserProgress();
   }
 
-  // Seleccionar/deseleccionar descuento
   void _selectDiscount(String discountId, int discountValue) {
     setState(() {
       if (_selectedDiscountId == discountId) {
-        // Deseleccionar si ya está seleccionado
         _selectedDiscountId = null;
         _selectedDiscountValue = null;
       } else {
-        // Seleccionar nuevo descuento
         _selectedDiscountId = discountId;
         _selectedDiscountValue = discountValue;
       }
@@ -111,17 +108,16 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           ),
         ],
       ),
-      // ======================= CAMBIO #1: Botón QR =======================
-      // Se elimina la condición para que el botón siempre esté activo.
+
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'show-qr',
         onPressed:
             () => _showQrDialog(
               context,
               authProvider.user.id,
-              // Si no hay descuento seleccionado, se pasa 0.
+
               _selectedDiscountValue ?? 0,
-              _selectedDiscountId ?? ""
+              _selectedDiscountId ?? "",
             ),
         icon: const Icon(Icons.qr_code),
         label: const Text('Mostrar QR'),
@@ -136,7 +132,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
       return ChoiceChip(
         label: Text(label),
         selected: selected,
-        selectedColor: selectedColor.withAlpha(38), // con transparencia
+        selectedColor: selectedColor.withAlpha(38),
         onSelected: (_) => setState(() => _filter = value),
       );
     }
@@ -151,7 +147,6 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  // No hay cambios en esta función, ya que la lógica se ajustó en la llamada.
   void _showQrDialog(
     BuildContext context,
     String userId,
@@ -203,7 +198,6 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 
       await ScreenBrightness.instance.setScreenBrightness(originalBrightness);
     } catch (e) {
-      debugPrint('Error al ajustar el brillo: $e');
       showDialog(
         context: context,
         builder:
@@ -236,16 +230,14 @@ class _DiscountCard extends StatelessWidget {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      // Se añade el clipBehavior para que el Positioned no se salga de los bordes redondeados.
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: isComplete ? onSelect : null, // Solo si está completo
+        onTap: isComplete ? onSelect : null,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Stack(
             children: [
-              // Tu columna de contenido original, sin cambios.
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -301,10 +293,6 @@ class _DiscountCard extends StatelessWidget {
                   Text('${(progress * 100).toStringAsFixed(0)} % completado'),
                 ],
               ),
-
-              // =================== CAMBIO #3: Posición del Check ===================
-              // Se añade el icono de check aquí, como un hijo del Stack,
-              // para que se superponga correctamente en la esquina.
             ],
           ),
         ),

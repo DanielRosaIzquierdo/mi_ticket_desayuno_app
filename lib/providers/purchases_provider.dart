@@ -148,7 +148,6 @@ class PurchasesProvider with ChangeNotifier {
 
   Future<bool> makePurchase(Purchase purchase, String discountId) async {
     try {
-      // Agrupa productos por nombre y suma la cantidad
       final Map<String, Product> groupedProducts = {};
       for (final p in purchase.products) {
         if (groupedProducts.containsKey(p.name)) {
