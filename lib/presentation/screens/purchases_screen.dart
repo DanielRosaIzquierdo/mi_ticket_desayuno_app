@@ -1,52 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:mi_ticket_desayuno_app/models/purchase_model.dart';
 import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
+import 'package:mi_ticket_desayuno_app/providers/purchases_provider.dart';
 import 'package:provider/provider.dart';
 
-class PurchasesScreen extends StatelessWidget {
+class PurchasesScreen extends StatefulWidget {
   const PurchasesScreen({super.key});
+
+  @override
+  State<PurchasesScreen> createState() => _PurchasesScreenState();
+}
+
+class _PurchasesScreenState extends State<PurchasesScreen> {
+  @override
+  void initState() {
+    final purchasesProvider = Provider.of<PurchasesProvider>(
+      context,
+      listen: false,
+    );
+    purchasesProvider.getPurchases();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final purchasesProvider = Provider.of<PurchasesProvider>(context);
 
-    final mockUserEmails = {
-      'user1': 'ana@example.com',
-      'user2': 'luis@example.com',
-    };
-
-    final purchases = [
-      Purchase(
-        id: 'p1',
-        userId: 'user1',
-        totalAmount: 18.50,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        products: [
-          Product(name: 'Café', price: 1.50),
-          Product(name: 'Croissant', price: 2.00),
-          Product(name: 'Zumo', price: 3.00),
-        ],
-      ),
-      Purchase(
-        id: 'p2',
-        userId: 'user2',
-        totalAmount: 12.00,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        products: [
-          Product(name: 'Tostada', price: 2.00),
-          Product(name: 'Té', price: 1.50),
-        ],
-      ),
-    ];
+    final purchases = purchasesProvider.purchases;
+    // final purchases = [
+    //   Purchase(
+    //     id: 'p1',
+    //     userId: 'user1',
+    //     totalAmount: 18.50,
+    //     date: DateTime.now().subtract(const Duration(days: 1)),
+    //     products: [
+    //       Product(name: 'Café', price: 1.50, quantity: 2),
+    //       Product(name: 'Croissant', price: 2.00, quantity: 3),
+    //       Product(name: 'Zumo', price: 3.00, quantity: 1),
+    //     ],
+    //   ),
+    //   Purchase(
+    //     id: 'p2',
+    //     userId: 'user2',
+    //     totalAmount: 12.00,
+    //     date: DateTime.now().subtract(const Duration(days: 2)),
+    //     products: [
+    //       Product(name: 'Tostada', price: 2.00, quantity: 1),
+    //       Product(name: 'Té', price: 1.50, quantity: 1),
+    //     ],
+    //   ),
+    // ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historial de compras'),
         centerTitle: true,
         leading: Image.asset('assets/images/icon.png'),
-
         actions: [
           IconButton(
             onPressed: () {
@@ -77,8 +88,7 @@ class PurchasesScreen extends StatelessWidget {
                 itemCount: purchases.length,
                 itemBuilder: (_, index) {
                   final purchase = purchases[index];
-                  final email =
-                      mockUserEmails[purchase.userId] ?? 'Usuario desconocido';
+                  final email = purchase.userEmail ?? 'Usuario eliminado';
                   final formattedDate = DateFormat(
                     'dd MMM yyyy, HH:mm',
                   ).format(purchase.date);
@@ -128,8 +138,12 @@ class PurchasesScreen extends StatelessWidget {
                             (p) => Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('- ${p.name}'),
-                                Text('${p.price.toStringAsFixed(2)} €'),
+                                Text(
+                                  '- ${p.name}${p.quantity > 1 ? ' x${p.quantity}' : ''}',
+                                ),
+                                Text(
+                                  '${(p.price * p.quantity).toStringAsFixed(2)} €',
+                                ),
                               ],
                             ),
                           ),
@@ -145,7 +159,7 @@ class PurchasesScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'add-purchase',
-        onPressed: () => context.push('/add-purchase'),
+        onPressed: () async => await context.push('/add-purchase'),
         icon: const Icon(Icons.add),
         label: const Text('Añadir compra'),
       ),

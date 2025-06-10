@@ -1,23 +1,43 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:mi_ticket_desayuno_app/client/dio_service.dart';
 import 'package:mi_ticket_desayuno_app/models/purchase_model.dart';
 
 class PurchasesProvider with ChangeNotifier {
-  // 1. Lista mock de productos
+  final dio = DioService.instance.client;
+  List<Purchase> purchases = [];
   final List<Product> products = [
-    Product(name: 'Café', price: 1.50, imageAsset: 'assets/images/cafe.jpg'),
+    Product(
+      name: 'Café',
+      price: 1.50,
+      quantity: 0,
+      imageAsset: 'assets/images/cafe.jpg',
+    ),
     Product(
       name: 'Croissant',
       price: 2.00,
+      quantity: 0,
       imageAsset: 'assets/images/croissant.jpg',
     ),
-    Product(name: 'Zumo', price: 3.00, imageAsset: 'assets/images/zumo.jpg'),
+    Product(
+      name: 'Zumo',
+      price: 3.00,
+      quantity: 0,
+      imageAsset: 'assets/images/zumo.jpg',
+    ),
     Product(
       name: 'Tostada',
       price: 2.00,
+      quantity: 0,
       imageAsset: 'assets/images/tostada.png',
     ),
-    Product(name: 'Té', price: 1.50, imageAsset: 'assets/images/te.jpg'),
+    Product(
+      name: 'Té',
+      price: 1.50,
+      quantity: 0,
+      imageAsset: 'assets/images/te.jpg',
+    ),
   ];
 
   List<String> selectedProductNames = [];
@@ -55,32 +75,17 @@ class PurchasesProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // -------------------------------------------------------------------
-  // 6. Función para comprobar que el usuario existe en el backend
-  Future<bool> checkUserExists(String userId) async {
-    try {
-      final dio = DioService.instance.client;
-      // Asegúrate de que DioService.instance.client esté configurado con la baseUrl correcta.
-      // Por ejemplo, en DioService podrías tener:
-      //   _dio = Dio(BaseOptions(baseUrl: 'http://192.168.x.x:3000'));
-      final response = await dio.get('/auth/user/$userId');
-      print('======================================== ${response.statusCode}');
-      if (response.statusCode == 200) {
-        final data = response.data;
-        // Dependiendo de cómo te devuelva el backend: si data es un Map con campo 'id':
-        if (data != null && data['id'] != null) {
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      return false;
+  Future<void> getPurchases() async {
+    final response = await dio.get('/purchases/all');
+
+    if (response.statusCode == 200) {
+      purchases = purchaseFromHistoryFromJson(jsonEncode(response.data));
+      addEmailToPurchases();
+      notifyListeners();
     }
   }
 
-  // 7. Genera el objeto Purchase a partir de userId y las cantidades actuales
-  Purchase createPurchaseObject(String userId) {
-    // Construimos la lista de Product a partir de selectedProductNames
+  Purchase createPurchaseObject(String userId, int discount) {
     final selectedList = <Product>[];
     for (final prod in products) {
       final qty = quantityOf(prod);
@@ -93,12 +98,75 @@ class PurchasesProvider with ChangeNotifier {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       userId: userId,
       products: selectedList,
-      totalAmount: total,
+      totalAmount: total - (total * (discount / 100)),
       date: DateTime.now(),
+      discount: discount,
     );
   }
 
   void resetSelectedProducts() {
     selectedProductNames = [];
+  }
+
+  Future<void> addEmailToPurchases() async {
+    for (var p in purchases) {
+      try {
+        final response = await dio.get('/auth/user/${p.userId}');
+        if (response.statusCode == 200) {
+          final data = response.data;
+          if (data != null && data['id'] != null) {
+            p.userEmail = data['email'];
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  Future<bool> makePurchase(Purchase purchase, String discountId) async {
+    try {
+      // Agrupa productos por nombre y suma la cantidad
+      final Map<String, Product> groupedProducts = {};
+      for (final p in purchase.products) {
+        if (groupedProducts.containsKey(p.name)) {
+          groupedProducts[p.name] = Product(
+            name: p.name,
+            quantity: groupedProducts[p.name]!.quantity + 1,
+            price: p.price,
+          );
+        } else {
+          groupedProducts[p.name] = Product(
+            name: p.name,
+            quantity: 1,
+            price: p.price,
+          );
+        }
+      }
+
+      final data = {
+        "userId": purchase.userId,
+        "products":
+            groupedProducts.values
+                .map(
+                  (p) => {
+                    "name": p.name,
+                    "quantity": p.quantity,
+                    "price": p.price,
+                  },
+                )
+                .toList(),
+        "totalAmount": purchase.totalAmount,
+        "date": purchase.date.toUtc().toIso8601String(),
+        "discountId": discountId,
+      };
+
+      final response = await dio.post(
+        '/purchases/register',
+        data: jsonEncode(data),
+      );
+
+      return response.statusCode == 201;
+    } catch (e) {
+      return false;
+    }
   }
 }

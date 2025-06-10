@@ -5,6 +5,7 @@ import 'package:mi_ticket_desayuno_app/models/user_model.dart';
 import 'package:mi_ticket_desayuno_app/preferences/preferences.dart';
 
 class AuthProvider with ChangeNotifier {
+  final dio = DioService.instance.client;
   bool isLoading = false;
   User user = User(id: '', name: '', email: '', role: '');
 
@@ -26,7 +27,6 @@ class AuthProvider with ChangeNotifier {
 
   Future<bool> login(String email, String password) async {
     try {
-      final dio = DioService.instance.client;
       final response = await dio.post(
         '/auth/login',
         data: {'email': email, 'password': password},
@@ -91,5 +91,20 @@ class AuthProvider with ChangeNotifier {
     }
     await saveUserDataWithoutNotify(token);
     return true;
+  }
+
+  Future<bool> checkUserExists(String userId) async {
+    try {
+      final response = await dio.get('/auth/user/$userId');
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data != null && data['id'] != null) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
 }

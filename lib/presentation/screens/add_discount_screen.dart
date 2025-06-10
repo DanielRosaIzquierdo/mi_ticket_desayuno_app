@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mi_ticket_desayuno_app/presentation/utils/utils.dart';
+import 'package:mi_ticket_desayuno_app/providers/discounts_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddDiscountScreen extends StatefulWidget {
   const AddDiscountScreen({super.key});
@@ -16,14 +18,37 @@ class _AddDiscountScreenState extends State<AddDiscountScreen> {
   double _value = 0.0; // objetivo (euros o visitas)
   double _discount = 0.0; // porcentaje de descuento
 
-  void _submit() {
+  void _submit() async {
     final form = _formKey.currentState!;
     if (form.validate()) {
       form.save();
 
-      // Aquí iría la lógica para guardar en backend o provider
-      PresentationUtils.showCustomSnackbar(context, 'Descuento creado');
-      context.pop();
+      final discountsProvider = Provider.of<DiscountsProvider>(
+        context,
+        listen: false,
+      );
+
+      final discountId = await discountsProvider.addDiscount(
+        type: _type,
+        value: _value.toInt(),
+        conditions: _conditions,
+        discount: (_discount * 100).toInt(), // almacena como entero %
+      );
+
+      if (discountId != null) {
+        if (mounted) {
+          PresentationUtils.showCustomSnackbar(context, 'Descuento creado');
+          discountsProvider.getDiscountsStablishmentView();
+          context.pop();
+        }
+      } else {
+        if (mounted) {
+          PresentationUtils.showCustomSnackbar(
+            context,
+            'Error al crear descuento',
+          );
+        }
+      }
     }
   }
 
@@ -41,24 +66,33 @@ class _AddDiscountScreenState extends State<AddDiscountScreen> {
                 value: _type,
                 items: const [
                   DropdownMenuItem(value: 'spending', child: Text('Por gasto')),
-                  DropdownMenuItem(value: 'purchases', child: Text('Por visitas')),
+                  DropdownMenuItem(
+                    value: 'purchases',
+                    child: Text('Por compras'),
+                  ),
                 ],
                 onChanged: (value) => setState(() => _type = value!),
-                decoration: const InputDecoration(labelText: 'Tipo de descuento'),
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de descuento',
+                ),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Condiciones'),
                 onSaved: (value) => _conditions = value ?? '',
-                validator: (value) =>
-                    (value == null || value.isEmpty) ? 'Campo obligatorio' : null,
+                validator:
+                    (value) =>
+                        (value == null || value.isEmpty)
+                            ? 'Campo obligatorio'
+                            : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 decoration: InputDecoration(
-                  labelText: _type == 'spending'
-                      ? 'Objetivo de gasto (€)'
-                      : 'Objetivo de visitas',
+                  labelText:
+                      _type == 'spending'
+                          ? 'Objetivo de gasto (€)'
+                          : 'Objetivo de visitas',
                 ),
                 keyboardType: TextInputType.number,
                 onSaved: (value) => _value = double.tryParse(value ?? '0')!,
@@ -74,7 +108,8 @@ class _AddDiscountScreenState extends State<AddDiscountScreen> {
               TextFormField(
                 decoration: const InputDecoration(labelText: 'Descuento (%)'),
                 keyboardType: TextInputType.number,
-                onSaved: (value) => _discount = double.tryParse(value ?? '0')! / 100,
+                onSaved:
+                    (value) => _discount = double.tryParse(value ?? '0')! / 100,
                 validator: (value) {
                   final v = double.tryParse(value ?? '');
                   if (v == null || v <= 0 || v > 100) {

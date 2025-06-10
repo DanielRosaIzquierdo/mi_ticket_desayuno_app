@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mi_ticket_desayuno_app/models/purchase_model.dart';
 import 'package:intl/intl.dart';
+import 'package:mi_ticket_desayuno_app/providers/discounts_provider.dart';
 import 'package:mi_ticket_desayuno_app/providers/purchases_provider.dart';
 import 'package:provider/provider.dart';
 
 class PurchaseSummaryScreen extends StatelessWidget {
   final Purchase purchase;
+  final String discountId;
 
-  const PurchaseSummaryScreen({Key? key, required this.purchase})
+  const PurchaseSummaryScreen({Key? key, required this.purchase, required this.discountId})
     : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final purchasesProvider = Provider.of<PurchasesProvider>(context);
+    final discountsProvider = Provider.of<DiscountsProvider>(context);
 
     final Map<String, List<double>> grouped = {};
     for (var p in purchase.products) {
@@ -75,36 +78,61 @@ class PurchaseSummaryScreen extends StatelessWidget {
                     }).toList(),
               ),
             ),
+            if (purchase.discount > 0)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    '-${purchase.discount}%',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: FontStyle.italic,
+                      fontSize: 30,
+                    ),
+                  ),
+                ],
+              ),
             const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {
-                    // Aquí puedes agregar la lógica más adelante
+                  onPressed: ()async {
+                    await purchasesProvider.makePurchase(purchase, discountId);
                     purchasesProvider.resetSelectedProducts();
                     context.go('/purchases');
                   },
-                  icon: const Icon(Icons.check_circle_outline, color: Colors.white, size: 28,),
+                  icon: const Icon(
+                    Icons.check_circle_outline,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                   label: const Text(
                     'Finalizar compra',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // color más llamativo
+                    backgroundColor: Colors.green,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
                     ),
                   ),
                 ),
-                Text(
-                  'Total: ${purchase.totalAmount.toStringAsFixed(2)} €',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                (discountsProvider.loadingFinalPrice)
+                    ? CircularProgressIndicator()
+                    : Text(
+                      'Total: ${(purchase.totalAmount).toStringAsFixed(2)} €',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
               ],
             ),
           ],

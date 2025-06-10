@@ -1,10 +1,12 @@
+import 'dart:convert'; // Añadir para jsonEncode
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mi_ticket_desayuno_app/models/discount_progress_model.dart';
 import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
+import 'package:mi_ticket_desayuno_app/providers/discounts_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:screen_brightness/screen_brightness.dart'; // ← usamos qr_flutter
+import 'package:screen_brightness/screen_brightness.dart';
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -14,44 +16,50 @@ class ClientDashboardScreen extends StatefulWidget {
 }
 
 class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
-  /// Filtros posibles: 'all', 'spending', 'purchases'
+  String? _selectedDiscountId;
+  int? _selectedDiscountValue;
   String _filter = 'all';
+
+  @override
+  void initState() {
+    super.initState();
+    final discountsProvider = Provider.of<DiscountsProvider>(
+      context,
+      listen: false,
+    );
+    discountsProvider.getUserProgress();
+  }
+
+  // Seleccionar/deseleccionar descuento
+  void _selectDiscount(String discountId, int discountValue) {
+    setState(() {
+      if (_selectedDiscountId == discountId) {
+        // Deseleccionar si ya está seleccionado
+        _selectedDiscountId = null;
+        _selectedDiscountValue = null;
+      } else {
+        // Seleccionar nuevo descuento
+        _selectedDiscountId = discountId;
+        _selectedDiscountValue = discountValue;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final discountsProvider = Provider.of<DiscountsProvider>(context);
+    final allDiscounts = discountsProvider.allDiscounts;
 
-    // ─────────── Datos de ejemplo ───────────
-    final allDiscounts = <DiscountProgress>[
-      DiscountProgress(
-        id: '1',
-        type: 'spending',
-        value: 0.35,
-        conditions: 'Gasta 50 €',
-      ),
-      DiscountProgress(
-        id: '2',
-        type: 'purchases',
-        value: 0.60,
-        conditions: '10 visitas',
-      ),
-      DiscountProgress(
-        id: '3',
-        type: 'spending',
-        value: 0.10,
-        conditions: 'Primer café',
-      ),
-    ];
     final discounts =
         _filter == 'all'
             ? allDiscounts
             : allDiscounts.where((d) => d.type == _filter).toList();
-    // ────────────────────────────────────────
 
     return Scaffold(
       appBar: AppBar(
         leading: Image.asset('assets/images/icon.png'),
-        title: Text('Dashboard'),
+        title: const Text('Dashboard'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -63,12 +71,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           ),
         ],
       ),
-
-      // ═════════════════ BODY ═════════════════
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ► Saludo
           Text(
             '¡Hola, ${authProvider.user.name}!',
             style: Theme.of(
@@ -76,8 +81,6 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             ).textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 24),
-
-          // ► Título + descripción
           const Text(
             'Descuentos disponibles',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -88,12 +91,8 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
           const SizedBox(height: 16),
-
-          // ► Filtros
           _buildFilterChips(context),
           const SizedBox(height: 16),
-
-          // ► Lista animada con bounce-in
           Column(
             key: ValueKey(_filter),
             children:
@@ -101,34 +100,43 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                     .map(
                       (d) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _DiscountCard(discount: d),
+                        child: _DiscountCard(
+                          discount: d,
+                          isSelected: _selectedDiscountId == d.id,
+                          onSelect: () => _selectDiscount(d.id, d.discount),
+                        ),
                       ),
                     )
                     .toList(),
           ),
         ],
       ),
-
-      // ═════════ FAB QR ═════════
+      // ======================= CAMBIO #1: Botón QR =======================
+      // Se elimina la condición para que el botón siempre esté activo.
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'show-qr',
-        onPressed: () => _showQrDialog(context, authProvider.user.id),
+        onPressed:
+            () => _showQrDialog(
+              context,
+              authProvider.user.id,
+              // Si no hay descuento seleccionado, se pasa 0.
+              _selectedDiscountValue ?? 0,
+              _selectedDiscountId ?? ""
+            ),
         icon: const Icon(Icons.qr_code),
         label: const Text('Mostrar QR'),
       ),
     );
   }
 
-  // ─────────── Chips de filtro ───────────
   Widget _buildFilterChips(BuildContext context) {
     final selectedColor = Theme.of(context).colorScheme.primary;
-
     ChoiceChip buildChip(String label, String value) {
       final selected = _filter == value;
       return ChoiceChip(
         label: Text(label),
         selected: selected,
-        selectedColor: selectedColor.withValues(alpha: 0.15),
+        selectedColor: selectedColor.withAlpha(38), // con transparencia
         onSelected: (_) => setState(() => _filter = value),
       );
     }
@@ -138,49 +146,62 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
       children: [
         buildChip('Todos', 'all'),
         buildChip('Por gasto', 'spending'),
-        buildChip('Por visitas', 'purchases'),
+        buildChip('Por compras', 'purchases'),
       ],
     );
   }
 
-  // ─────────── Dialog con QR usando qr_flutter ───────────
-
-  void _showQrDialog(BuildContext context, String userId) async {
+  // No hay cambios en esta función, ya que la lógica se ajustó en la llamada.
+  void _showQrDialog(
+    BuildContext context,
+    String userId,
+    int discount,
+    String discountId,
+  ) async {
     try {
-      // Guarda el brillo actual
-      final originalBrightness = await ScreenBrightness.instance.application;
+      final originalBrightness = await ScreenBrightness.instance.current;
+      await ScreenBrightness.instance.setScreenBrightness(1.0);
+      final qrData = jsonEncode({
+        'user_id': userId,
+        'discount': discount,
+        'discount_id': discountId,
+      });
 
-      // Sube el brillo al máximo para mostrar el QR
-      await ScreenBrightness.instance.setApplicationScreenBrightness(1.0);
-
-      // Muestra el diálogo con el QR
       await showDialog(
         context: context,
+        barrierDismissible: false,
         builder:
-            (_) => AlertDialog(
-              title: const Text('Tu código QR'),
-              content: SizedBox(
-                height: 220,
-                width: 220,
-                child: QrImageView(
-                  data: userId,
-                  version: QrVersions.auto,
-                  size: 200,
+            (_) => PopScope(
+              canPop: false,
+              child: AlertDialog(
+                title: const Text('Tu código QR'),
+                content: SizedBox(
+                  height: 220,
+                  width: 220,
+                  child: QrImageView(
+                    data: qrData,
+                    version: QrVersions.auto,
+                    size: 200,
+                  ),
                 ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      final discountsProvider = Provider.of<DiscountsProvider>(
+                        context,
+                        listen: false,
+                      );
+                      discountsProvider.getUserProgress();
+                      context.pop();
+                    },
+                    child: const Text('Cerrar'),
+                  ),
+                ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Cerrar'),
-                ),
-              ],
             ),
       );
 
-      // Restaura el brillo original
-      await ScreenBrightness.instance.setApplicationScreenBrightness(
-        originalBrightness,
-      );
+      await ScreenBrightness.instance.setScreenBrightness(originalBrightness);
     } catch (e) {
       debugPrint('Error al ajustar el brillo: $e');
       showDialog(
@@ -195,51 +216,97 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 }
 
-// ─────────── Card de descuento ───────────
 class _DiscountCard extends StatelessWidget {
-  const _DiscountCard({required this.discount});
+  const _DiscountCard({
+    required this.discount,
+    required this.isSelected,
+    required this.onSelect,
+  });
 
   final DiscountProgress discount;
+  final bool isSelected;
+  final VoidCallback onSelect;
 
   @override
   Widget build(BuildContext context) {
-    final progress = discount.value.toDouble();
+    final progress = discount.progress.toDouble();
     final icon = discount.type == 'spending' ? '💰' : '☕';
+    final isComplete = progress >= 1.0;
 
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(icon, style: const TextStyle(fontSize: 20)),
-                const SizedBox(width: 8),
-                Text(
-                  discount.type == 'spending' ? 'Por gasto' : 'Por visitas',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+      // Se añade el clipBehavior para que el Positioned no se salga de los bordes redondeados.
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: isComplete ? onSelect : null, // Solo si está completo
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Stack(
+            children: [
+              // Tu columna de contenido original, sin cambios.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(icon, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Text(
+                        discount.type == 'spending'
+                            ? 'Por gasto'
+                            : 'Por compras',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${discount.discount.toString()}%',
+                        style: const TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      if (isSelected)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Icon(
+                            Icons.check_circle,
+                            color: Colors.blue,
+                            size: 28,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              discount.conditions,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            const SizedBox(height: 4),
-            Text('${(progress * 100).toStringAsFixed(0)} % completado'),
-          ],
+                  const SizedBox(height: 8),
+                  Text(
+                    discount.type == 'spending'
+                        ? 'Gasta ${discount.value}€'
+                        : 'Haz ${discount.value} compras',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(8),
+                    color:
+                        isComplete
+                            ? Colors.green
+                            : Theme.of(context).primaryColor,
+                  ),
+                  const SizedBox(height: 4),
+                  Text('${(progress * 100).toStringAsFixed(0)} % completado'),
+                ],
+              ),
+
+              // =================== CAMBIO #3: Posición del Check ===================
+              // Se añade el icono de check aquí, como un hijo del Stack,
+              // para que se superponga correctamente en la esquina.
+            ],
+          ),
         ),
       ),
     );

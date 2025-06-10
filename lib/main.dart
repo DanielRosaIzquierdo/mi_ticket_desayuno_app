@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
+import 'package:mi_ticket_desayuno_app/providers/discounts_provider.dart';
 import 'package:mi_ticket_desayuno_app/providers/purchases_provider.dart';
 import 'package:mi_ticket_desayuno_app/router/router.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => DiscountsProvider()),
         ChangeNotifierProvider(create: (context) => PurchasesProvider()),
       ],
       child: const MyApp(),

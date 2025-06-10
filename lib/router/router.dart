@@ -38,8 +38,13 @@ final router = GoRouter(
     GoRoute(
       path: '/purchase-summary',
       builder: (context, state) {
-        final purchase = state.extra as Purchase;
-        return PurchaseSummaryScreen(purchase: purchase);
+        final extras = state.extra as Map<String, dynamic>;
+        final purchase = extras['purchase'] as Purchase;
+        final discountId = extras['discountId'] as String;
+        return PurchaseSummaryScreen(
+          purchase: purchase,
+          discountId: discountId,
+        );
       },
     ),
     StatefulShellRoute.indexedStack(

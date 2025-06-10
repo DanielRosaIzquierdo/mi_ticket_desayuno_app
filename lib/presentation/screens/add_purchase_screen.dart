@@ -1,19 +1,19 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mi_ticket_desayuno_app/presentation/screens/qr_scanner_screen.dart';
+import 'package:mi_ticket_desayuno_app/presentation/utils/utils.dart';
+import 'package:mi_ticket_desayuno_app/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:mi_ticket_desayuno_app/providers/purchases_provider.dart';
-
-// Mantén la misma clase Product aquí (sin cambios)
-
-// Mantén la clase Purchase sin cambios
 
 class AddPurchaseScreen extends StatelessWidget {
   const AddPurchaseScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<PurchasesProvider>(context);
+    final purchasesProvider = Provider.of<PurchasesProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Nueva compra')),
@@ -24,8 +24,8 @@ class AddPurchaseScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children:
-                    provider.products.map((product) {
-                      final quantity = provider.quantityOf(product);
+                    purchasesProvider.products.map((product) {
+                      final quantity = purchasesProvider.quantityOf(product);
                       final selected = quantity > 0;
                       return Card(
                         shape: RoundedRectangleBorder(
@@ -70,7 +70,8 @@ class AddPurchaseScreen extends StatelessWidget {
                                 icon: const Icon(Icons.remove_circle_outline),
                                 onPressed:
                                     quantity > 0
-                                        ? () => provider.decrement(product)
+                                        ? () =>
+                                            purchasesProvider.decrement(product)
                                         : null,
                               ),
                               Text(
@@ -79,7 +80,8 @@ class AddPurchaseScreen extends StatelessWidget {
                               ),
                               IconButton(
                                 icon: const Icon(Icons.add_circle_outline),
-                                onPressed: () => provider.increment(product),
+                                onPressed:
+                                    () => purchasesProvider.increment(product),
                               ),
                             ],
                           ),
@@ -89,9 +91,8 @@ class AddPurchaseScreen extends StatelessWidget {
               ),
             ),
 
-            // Muestra el total que viene del provider:
             Text(
-              'Total: ${provider.total.toStringAsFixed(2)} €',
+              'Total: ${purchasesProvider.total.toStringAsFixed(2)} €',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -99,21 +100,32 @@ class AddPurchaseScreen extends StatelessWidget {
             // Botón QR (desplegar escáner y verificar usuario)
             ElevatedButton.icon(
               onPressed:
-                  provider.isEmpty
+                  purchasesProvider.isEmpty
                       ? null
                       : () async {
-                        //final result = '1h0ltk1ce8tbD5n4BAOn';
-                         final result = await context.push('/qr-scanner');
+                        try {
+                          dynamic result = await context.push('/qr-scanner');
 
+                        print(result);
                         if (result != null) {
-                          final userId = result.toString();
-
-                          final exists = await provider.checkUserExists(userId);
+                          Map<String, dynamic> resultMap = jsonDecode(result);
+                          final String userId = resultMap["user_id"];
+                          final int discount = resultMap["discount"];
+                          final String discountId = resultMap["discount_id"];
+                          final exists = await authProvider.checkUserExists(
+                            userId,
+                          );
                           if (exists) {
-                            final purchase = provider.createPurchaseObject(
-                              userId,
+                            final purchase = purchasesProvider
+                                .createPurchaseObject(userId, discount);
+                                print('========================= entrando en summary... =========================');
+                          await  context.push(
+                              '/purchase-summary',
+                              extra: {
+                                'purchase': purchase,
+                                'discountId': discountId,
+                              },
                             );
-                            context.push('/purchase-summary', extra: purchase);
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -122,6 +134,10 @@ class AddPurchaseScreen extends StatelessWidget {
                             );
                           }
                         }
+                        } catch (e) {
+                            PresentationUtils.showCustomSnackbar(context, 'Error al escanear, vuelve a intentarlo');
+                        }
+                        
                       },
               icon: const Icon(Icons.qr_code_scanner),
               label: const Text('Escanear QR usuario'),
