@@ -128,7 +128,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                           final formattedDate = DateFormat(
                             'dd MMM yyyy, HH:mm',
                           ).format(purchase.date);
-      
+
                           return Card(
                             elevation: 3,
                             shape: RoundedRectangleBorder(
@@ -142,10 +142,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(
-                                        Icons.receipt_long,
-                                        size: 20,
-                                      ),
+                                      const Icon(Icons.receipt_long, size: 20),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(

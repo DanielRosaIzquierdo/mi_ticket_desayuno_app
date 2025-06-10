@@ -47,20 +47,27 @@ class _StatsScreenState extends State<StatsScreen>
     if (data.isEmpty) {
       return const Center(child: Text('No hay datos disponibles.'));
     }
-    return ListView.separated(
-      itemCount: data.length,
-      separatorBuilder: (_, __) => const Divider(),
-      itemBuilder: (context, index) {
-        final item = data[index];
-        return ListTile(
-          leading: CircleAvatar(child: Text('${index + 1}')),
-          title: Text(item.email),
-          trailing: Text(
-            '${item.totalSpent.toStringAsFixed(2)} €',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        );
-      },
+    return RefreshIndicator(
+       onRefresh: () async {
+          final provider = context.read<PurchasesProvider>();
+          await provider.getTopSpenders();
+          await provider.getTopPurchasers();
+        },
+      child: ListView.separated(
+        itemCount: data.length,
+        separatorBuilder: (_, __) => const Divider(),
+        itemBuilder: (context, index) {
+          final item = data[index];
+          return ListTile(
+            leading: CircleAvatar(child: Text('${index + 1}')),
+            title: Text(item.email),
+            trailing: Text(
+              '${item.totalSpent.toStringAsFixed(2)} €',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -71,20 +78,27 @@ class _StatsScreenState extends State<StatsScreen>
     if (data.isEmpty) {
       return const Center(child: Text('No hay datos disponibles.'));
     }
-    return ListView.separated(
-      itemCount: data.length,
-      separatorBuilder: (_, __) => const Divider(),
-      itemBuilder: (context, index) {
-        final item = data[index];
-        return ListTile(
-          leading: CircleAvatar(child: Text('${index + 1}')),
-          title: Text(item.email),
-          trailing: Text(
-            '${item.purchaseCount} compras',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        );
-      },
+    return RefreshIndicator(
+       onRefresh: () async {
+          final provider = context.read<PurchasesProvider>();
+          await provider.getTopSpenders();
+          await provider.getTopPurchasers();
+        },
+      child: ListView.separated(
+        itemCount: data.length,
+        separatorBuilder: (_, __) => const Divider(),
+        itemBuilder: (context, index) {
+          final item = data[index];
+          return ListTile(
+            leading: CircleAvatar(child: Text('${index + 1}')),
+            title: Text(item.email),
+            trailing: Text(
+              '${item.purchaseCount} compras',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          );
+        },
+      ),
     );
   }
 
