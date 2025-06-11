@@ -33,7 +33,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historial de compras'),
+        title: const Text('Compras'),
         centerTitle: true,
         leading: Image.asset('assets/images/icon.png'),
 

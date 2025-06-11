@@ -68,45 +68,57 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            '¡Hola, ${authProvider.user.name}!',
-            style: Theme.of(
-              context,
-            ).textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Descuentos disponibles',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Revisa tu progreso y aprovecha las promociones de tu cafetería favorita.',
-            style: TextStyle(fontSize: 14, color: Colors.black54),
-          ),
-          const SizedBox(height: 16),
-          _buildFilterChips(context),
-          const SizedBox(height: 16),
-          Column(
-            key: ValueKey(_filter),
-            children:
-                discounts
-                    .map(
-                      (d) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _DiscountCard(
-                          discount: d,
-                          isSelected: _selectedDiscountId == d.id,
-                          onSelect: () => _selectDiscount(d.id, d.discount),
-                        ),
-                      ),
-                    )
-                    .toList(),
-          ),
-        ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final discountsProvider = Provider.of<DiscountsProvider>(
+            context,
+            listen: false,
+          );
+          discountsProvider.getUserProgress();
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            Text(
+              '¡Hola, ${authProvider.user.name}!',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineLarge!.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Descuentos disponibles',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Revisa tu progreso y aprovecha las promociones de tu cafetería favorita.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            const SizedBox(height: 16),
+            _buildFilterChips(context),
+            const SizedBox(height: 16),
+            (discounts.isEmpty)
+                ? Center(child: Text('No hay descuentos disponibles'))
+                : Column(
+                  key: ValueKey(_filter),
+                  children:
+                      discounts
+                          .map(
+                            (d) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _DiscountCard(
+                                discount: d,
+                                isSelected: _selectedDiscountId == d.id,
+                                onSelect:
+                                    () => _selectDiscount(d.id, d.discount),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                ),
+          ],
+        ),
       ),
 
       floatingActionButton: FloatingActionButton.extended(

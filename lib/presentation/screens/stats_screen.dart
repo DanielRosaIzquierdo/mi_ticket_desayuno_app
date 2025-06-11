@@ -45,14 +45,27 @@ class _StatsScreenState extends State<StatsScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (data.isEmpty) {
-      return const Center(child: Text('No hay datos disponibles.'));
-    }
-    return RefreshIndicator(
-       onRefresh: () async {
+      return RefreshIndicator(
+        onRefresh: () async {
           final provider = context.read<PurchasesProvider>();
           await provider.getTopSpenders();
           await provider.getTopPurchasers();
         },
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.70,
+            child: const Center(child: Text('No hay datos disponibles.')),
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () async {
+        final provider = context.read<PurchasesProvider>();
+        await provider.getTopSpenders();
+        await provider.getTopPurchasers();
+      },
       child: ListView.separated(
         itemCount: data.length,
         separatorBuilder: (_, __) => const Divider(),
@@ -76,14 +89,27 @@ class _StatsScreenState extends State<StatsScreen>
       return const Center(child: CircularProgressIndicator());
     }
     if (data.isEmpty) {
-      return const Center(child: Text('No hay datos disponibles.'));
-    }
-    return RefreshIndicator(
-       onRefresh: () async {
+      return RefreshIndicator(
+        onRefresh: () async {
           final provider = context.read<PurchasesProvider>();
           await provider.getTopSpenders();
           await provider.getTopPurchasers();
         },
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.70,
+            child: const Center(child: Text('No hay datos disponibles.')),
+          ),
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: () async {
+        final provider = context.read<PurchasesProvider>();
+        await provider.getTopSpenders();
+        await provider.getTopPurchasers();
+      },
       child: ListView.separated(
         itemCount: data.length,
         separatorBuilder: (_, __) => const Divider(),
