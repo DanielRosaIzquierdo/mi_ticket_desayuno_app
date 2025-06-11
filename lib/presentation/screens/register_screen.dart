@@ -62,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
@@ -75,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(Icons.coffee, size: 72, color: colorScheme.primary),
+                 Image.asset('assets/images/logo.png'),
                   const SizedBox(height: 24),
                   Text(
                     'Registro',
